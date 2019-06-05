@@ -35,6 +35,7 @@ ALWAYS_KEEP_AT_LEAST=2
 # backups
 
 RSYNC_CMD='/usr/bin/rsync'
+RSYNC_COMPARE_CHECKSUM=false
 RSYNC_EXCLUDE=(
 #    'Cache'
 #    'parent.lock'
@@ -96,14 +97,18 @@ create_rsync_cmd () {
     local date="$1"
     local dest_dir="$ARCHIVE_DIR/$date"
 
-    local rsync="$RSYNC_CMD -av"
+    local rsync="$RSYNC_CMD --archive --verbose"
+
+    if $RSYNC_COMPARE_CHECKSUM; then
+        rsync="$rsync --checksum"
+    fi
 
     for exclude in ${RSYNC_EXCLUDE[@]}; do
         rsync="$rsync --exclude=$exclude"
     done
 
     local latest=$(latest_backup)
-    if [[ "$latest" ]] && [[ "$latest" != "$DATE" ]]; then
+    if [[ "$latest" ]] && [ "$latest" != "$date" ]; then
         rsync="$rsync --link-dest=$ARCHIVE_DIR/$latest"
     fi
 
