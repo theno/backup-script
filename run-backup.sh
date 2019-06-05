@@ -34,6 +34,13 @@ NUMBER_OF_RECENT_BACKUPS=7
 ALWAYS_KEEP_AT_LEAST=2
 # backups
 
+RSYNC_CMD='/usr/bin/rsync'
+RSYNC_EXCLUDE=(
+#    'Cache'
+#    'parent.lock'
+#    'Temp*'
+)
+
 ### configuration ends here
 
 
@@ -62,7 +69,7 @@ check_dirs () {
     done
 
     if [[ ! -d "$ARCHIVE_DIR" ]]; then
-        echo "ARCHIVE_DIR=('$ARCHIVE_DIR') is not a directory"
+        echo "ARCHIVE_DIR='$ARCHIVE_DIR' is not a directory"
         error=true
     fi
 
@@ -78,6 +85,57 @@ check_dirs () {
         echo 'okay'
     fi
 }
+
+
+latest_backup () {
+    eval "ls $ARCHIVE_DIR | tail -n1"
+}
+
+
+create_rsync_cmd () {
+    local date="$1"
+    local dest_dir="$ARCHIVE_DIR/$date"
+
+    local rsync="$RSYNC_CMD -av"
+
+    for exclude in ${RSYNC_EXCLUDE[@]}; do
+        rsync="$rsync --exclude=$exclude"
+    done
+
+    local latest=$(latest_backup)
+    if [[ "$latest" ]] && [[ "$latest" != "$DATE" ]]; then
+        rsync="$rsync --link-dest=$ARCHIVE_DIR/$latest"
+    fi
+
+    for source_dir in ${SOURCE_DIRS[@]%/}; do
+        rsync="$rsync  $source_dir"
+    done
+
+    echo "$rsync  $dest_dir"
+}
+
+
+run () {
+    local cmd=$1
+    echo "$cmd"
+    eval "$cmd"
+    echo "[$?]"
+}
+
+
+create_backup () {
+    echo -e '\n# create backup\n'
+
+    local date="$(date +%F)"
+    local rsync="$(create_rsync_cmd $date)"
+
+    echo "$rsync" > "/tmp/backup-script_rsync.log"
+    run "$rsync  &>> /tmp/backup-script_rsync.log"
+
+    run "mv /tmp/backup-script_rsync.log  $ARCHIVE_DIR/$date/rsync.log"
+    echo -e '\ndone'
+}
+
 
 # For example, if the archive contains this
 # backups:            special_order returns:
@@ -136,12 +194,13 @@ special_order () {
     echo "${special_order[@]}"
 }
 
+
 # Remove "old" backups in special_order when low on disc space.
 #
 remove_backups () {
     local archive_dir="$1"
 
-    echo -e '\n# remove archived backups in $archive_dir\n'
+    echo -e '\n# remove archived backups\n'
 
     if low_on_disc_space; then
         while low_on_disc_space; do
@@ -165,12 +224,13 @@ remove_backups () {
     fi
 }
 
+
 main () {
-    # check if archive and source dirs exist
     check_dirs
-    # create backup (when enough disc space)
+    create_backup
     remove_backups $ARCHIVE_DIR
     # show/email status
 }
+
 
 main
