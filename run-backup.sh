@@ -18,11 +18,15 @@
 
 ### configuration begins here
 
-SOURCE_DIRS=()
+SOURCE_DIRS=(
+    'source-dir'
+#    '/path/to/another/source-dir'
+)
+
 ARCHIVE_DIR='./backups'
 
-MIN_FREE_GB=100
-# MIN_FREE_GB=30
+# MIN_FREE_DISC_SPACE_IN_GB=100
+MIN_FREE_DISC_SPACE_IN_GB=30
 
 NUMBER_OF_RECENT_BACKUPS=7
 
@@ -34,10 +38,45 @@ ALWAYS_KEEP_AT_LEAST=2
 
 
 low_on_disc_space () {
-    local bytes_required=$(expr $MIN_FREE_GB \* 1024 \* 1024)
+    local bytes_required=$(expr $MIN_FREE_DISC_SPACE_IN_GB \* 1024 \* 1024)
     local bytes_available=$(df --output=avail . | awk 'NR==2{print $1}')
 
     (($bytes_required >= $bytes_available))
+}
+
+check_dirs () {
+    local error=false
+
+    echo -e '# check dirs\n'
+
+    if [[ "${#SOURCE_DIRS[@]}" -eq "0" ]]; then
+        echo "no SOURCE_DIRS=('/path/to/source' ...) configured"
+        error=true
+    fi
+
+    for source_dir in "${SOURCE_DIRS[@]}"; do
+        if [[ ! -d "$source_dir" ]]; then
+            echo "SOURCE_DIRS=('$source_dir') is not a directory"
+            error=true
+        fi
+    done
+
+    if [[ ! -d "$ARCHIVE_DIR" ]]; then
+        echo "ARCHIVE_DIR=('$ARCHIVE_DIR') is not a directory"
+        error=true
+    fi
+
+    if low_on_disc_space; then
+        echo "ARCHIVE_DIR='$ARCHIVE_DIR' is low on free disc space"
+        error=true
+    fi
+
+    if $error; then
+        echo 'abort'
+        exit 1
+    else
+        echo 'okay'
+    fi
 }
 
 # For example, if the archive contains this
@@ -102,7 +141,7 @@ special_order () {
 remove_backups () {
     local archive_dir="$1"
 
-    echo -e "# remove archived backups in $archive_dir\\n"
+    echo -e '\n# remove archived backups in $archive_dir\n'
 
     if low_on_disc_space; then
         while low_on_disc_space; do
@@ -128,6 +167,7 @@ remove_backups () {
 
 main () {
     # check if archive and source dirs exist
+    check_dirs
     # create backup (when enough disc space)
     remove_backups $ARCHIVE_DIR
     # show/email status
