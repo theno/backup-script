@@ -1,20 +1,5 @@
 #!/bin/bash
 
-# workflow
-#
-# * if exists FLAG_NEW_BACKUP_EXISTS (and not FLAG_NEW_BACKUP_IN_PROGRESS)
-#   * do backup
-#     * find latest (if symlink exists)
-#     * rsync to YYYY-MM-DD
-#       * use hardlink to latest
-#   * remove old backups
-#     * special order (from high to low)
-#       * latest n backups
-#       * backups with lowest day by month
-#       * rest
-#     * start with lowest backup
-#       * till minimum required free disk space achieved
-
 
 ### configuration begins here
 
@@ -24,6 +9,7 @@ SOURCE_DIRS=(
 )
 
 ARCHIVE_DIR='./backups'
+# ARCHIVE_DIR='/path/to/archive/dir'
 
 # MIN_FREE_DISC_SPACE_IN_GB=100
 MIN_FREE_DISC_SPACE_IN_GB=30
@@ -41,6 +27,8 @@ RSYNC_EXCLUDE=(
 #    'parent.lock'
 #    'Temp*'
 )
+
+CONSUME_FLAGS=true
 
 ### configuration ends here
 
@@ -131,14 +119,36 @@ run () {
 create_backup () {
     echo -e '\n# create backup\n'
 
+    local create=false
     local date="$(date +%F)"
-    local rsync="$(create_rsync_cmd $date)"
 
-    echo "$rsync" > "/tmp/backup-script_rsync.log"
-    run "$rsync  &>> /tmp/backup-script_rsync.log"
+    if $CONSUME_FLAGS; then
+        local src="${SOURCE_DIRS[0]}"
+        # only create backup if FLAG_NEW_BACKUP_EXISTS and
+        # not a FLAG_NEW_BACKUP_IN_PROGRESS
+        if [ -f "$src/FLAG_NEW_BACKUP_EXISTS" ] && \
+                [ ! -f "$src/FLAG_NEW_BACKUP_IN_PROGRESS" ]; then
+            create=true
+            date="$(cat $src/FLAG_NEW_BACKUP_EXISTS)"
+        fi
+    else
+        create=true
+    fi
 
-    run "mv /tmp/backup-script_rsync.log  $ARCHIVE_DIR/$date/rsync.log"
-    echo -e '\ndone'
+    if $create; then
+        local rsync="$(create_rsync_cmd $date)"
+
+        echo "$rsync" > "/tmp/backup-script_rsync.log"
+        run "$rsync  &>> /tmp/backup-script_rsync.log"
+
+        run "mv /tmp/backup-script_rsync.log  $ARCHIVE_DIR/$date/rsync.log"
+        echo -e '\ndone'
+        if $CONSUME_FLAGS; then
+            mv "$src/FLAG_NEW_BACKUP_EXISTS" "$src/FLAG_LATEST_ARCHIVED"
+        fi
+    else
+        echo 'nothing to do'
+    fi
 }
 
 
@@ -228,10 +238,25 @@ remove_backups () {
 }
 
 
+# workflow
+#
+# * if exists FLAG_NEW_BACKUP_EXISTS (and not FLAG_NEW_BACKUP_IN_PROGRESS)
+#   * do backup
+#     * find latest (if symlink exists)
+#     * rsync to YYYY-MM-DD
+#       * use hardlink to latest
+#   * remove old backups
+#     * special order (from high to low)
+#       * latest n backups
+#       * backups with lowest day by month
+#       * rest
+#     * start with lowest backup
+#       * till minimum required free disk space achieved
+#
 main () {
-    check_dirs
+    # check_dirs
     create_backup
-    remove_backups
+    # remove_backups
     # show/email status
 }
 
