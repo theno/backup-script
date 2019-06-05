@@ -198,14 +198,12 @@ special_order () {
 # Remove "old" backups in special_order when low on disc space.
 #
 remove_backups () {
-    local archive_dir="$1"
-
     echo -e '\n# remove archived backups\n'
 
     if low_on_disc_space; then
         while low_on_disc_space; do
 
-            local dates=( $(special_order "$archive_dir") )
+            local dates=( $(special_order "$ARCHIVE_DIR") )
 
             if [[ "${#dates[@]}" -le "$ALWAYS_KEEP_AT_LEAST" ]]; then
                 echo "only ${#dates[@]} backups exist, abort"
@@ -214,7 +212,7 @@ remove_backups () {
                 break
             fi
 
-            to_remove="$archive_dir/${dates[0]}"
+            to_remove="$ARCHIVE_DIR/${dates[0]}"
             echo -n "remove $to_remove ..."
             rm -rf "$to_remove"
             echo ' done'
@@ -228,7 +226,7 @@ remove_backups () {
 main () {
     check_dirs
     create_backup
-    remove_backups $ARCHIVE_DIR
+    remove_backups
     # show/email status
 }
 
