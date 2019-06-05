@@ -10,10 +10,11 @@ Features:
  * requires a minimum of maintenance work, therefore
  * remove old backups if low on disc space, with respect of a:
    * fine grained short history:
-     try to keep at least the latest n backups (eg. up to 7)
+     try to keep at least the recent n backups (eg. up to 7)
    * coarse grained monthly history:
      try to keep first backup in a month
- * send short status mails
+ * this strategy keeps as many backups as possible
+ * optionally, send short status mails
 
 ## Usage
 
