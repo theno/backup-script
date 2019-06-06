@@ -56,31 +56,30 @@ check_dirs () {
     echo -e '# check dirs\n'
 
     if [[ "${#SOURCE_DIRS[@]}" -eq "0" ]]; then
-        echo "no SOURCE_DIRS=('/path/to/source' ...) configured"
+        echo "* no SOURCE_DIRS=('/path/to/source' ...) configured"
         error=true
     fi
-
     for source_dir in "${SOURCE_DIRS[@]}"; do
         if [[ ! -d "$source_dir" ]]; then
-            echo "SOURCE_DIRS=('$source_dir') is not a directory"
+            echo "* SOURCE_DIRS=('$source_dir') is not a directory"
             error=true
         fi
     done
 
     if $CONSUME_FLAGS; then
         if [[ ! -d "$FLAGS_DIR" ]]; then
-            echo "FLAGS_DIR='$FLAGS_DIR' is not a directory"
+            echo "* FLAGS_DIR='$FLAGS_DIR' is not a directory"
             error=true
         fi
         if [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ] && \
                 [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_IN_PROGRESS" ] && \
                 [ ! -f "$FLAGS_DIR/FLAG_LATEST_ARCHIVED" ]; then
-            echo "no flag files exist in FLAGS_DIR='$FLAGS_DIR'"
+            echo "* no flag files exist in FLAGS_DIR='$FLAGS_DIR'"
             error=true
         fi
         if flags_signal_a_new_backup_job; then
             if [ ! -w "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ]; then
-                echo -n "could not move $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS "
+                echo -n "* could not move $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS "
                 echo "to $FLAGS_DIR/FLAG_LATEST_ARCHIVED (check permissions)"
                 error=true
             fi
@@ -88,16 +87,16 @@ check_dirs () {
     fi
 
     if [[ ! -d "$ARCHIVE_DIR" ]]; then
-        echo "ARCHIVE_DIR='$ARCHIVE_DIR' is not a directory"
+        echo "* ARCHIVE_DIR='$ARCHIVE_DIR' is not a directory"
         error=true
     fi
     if [ ! -w "$ARCHIVE_DIR" ]; then
-        echo "cannot write to ARCHIVE_DIR='$ARCHIVE_DIR' (check permissions)"
+        echo "* cannot write to ARCHIVE_DIR='$ARCHIVE_DIR' (check permissions)"
         error=true
     fi
 
     if low_on_disc_space; then
-        echo "ARCHIVE_DIR='$ARCHIVE_DIR' is low on free disc space"
+        echo "* ARCHIVE_DIR='$ARCHIVE_DIR' is low on free disc space"
         error=true
     fi
 
