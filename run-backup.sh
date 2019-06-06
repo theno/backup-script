@@ -55,19 +55,19 @@ check_dirs () {
 
     echo -e '# check dirs\n'
 
-    if [[ "${#SOURCE_DIRS[@]}" -eq "0" ]]; then
+    if [ "${#SOURCE_DIRS[@]}" -eq "0" ]; then
         echo "* no SOURCE_DIRS=('/path/to/source' ...) configured"
         error=true
     fi
     for source_dir in "${SOURCE_DIRS[@]}"; do
-        if [[ ! -d "$source_dir" ]]; then
+        if [ ! -d "$source_dir" ]; then
             echo "* SOURCE_DIRS=('$source_dir') is not a directory"
             error=true
         fi
     done
 
     if $CONSUME_FLAGS; then
-        if [[ ! -d "$FLAGS_DIR" ]]; then
+        if [ ! -d "$FLAGS_DIR" ]; then
             echo "* FLAGS_DIR='$FLAGS_DIR' is not a directory"
             error=true
         fi
@@ -86,7 +86,7 @@ check_dirs () {
         fi
     fi
 
-    if [[ ! -d "$ARCHIVE_DIR" ]]; then
+    if [ ! -d "$ARCHIVE_DIR" ]; then
         echo "* ARCHIVE_DIR='$ARCHIVE_DIR' is not a directory"
         error=true
     fi
