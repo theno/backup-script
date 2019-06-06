@@ -63,6 +63,9 @@ check_dirs () {
         if [ ! -d "$source_dir" ]; then
             echo "* SOURCE_DIRS=('$source_dir') is not a directory"
             error=true
+        elif [ ! -r "$source_dir" ]; then
+            echo "* no permission to read SOURCE_DIRS=('$source_dir') "
+            error=true
         fi
     done
 
@@ -97,7 +100,12 @@ check_dirs () {
 
     if low_on_disc_space; then
         echo "* ARCHIVE_DIR='$ARCHIVE_DIR' is low on free disc space"
-        error=true
+        if ! $error; then
+            remove_backups
+            if low_on_disc_space; then
+                error=true
+            fi
+        fi
     fi
 
     if $error; then
@@ -253,8 +261,8 @@ remove_backups () {
 
             local dates=( $(special_order "$ARCHIVE_DIR") )
 
-            if [[ "${#dates[@]}" -le "$ALWAYS_KEEP_AT_LEAST" ]]; then
-                echo "only ${#dates[@]} backups exist, abort"
+            if [ "${#dates[@]}" -le "$ALWAYS_KEEP_AT_LEAST" ]; then
+                echo "only ${#dates[@]} backups exist (skip)"
                 echo 'no space left for a new backup'
                 echo 'LOW ON DISC SPACE'
                 break
@@ -272,18 +280,25 @@ remove_backups () {
 
 
 summary () {
-    local start="$1"
     echo -e '\n# summary\n'
 
-    echo "created backup: $BACKUP_DATE"
+    echo -e 'created backup:\n'
+    echo "'''"
+    eval "tree -n -L 1 $ARCHIVE_DIR/$BACKUP_DATE | head -n -2"
+    echo "'''"
 
     echo -e '\n## timing\n'
-    echo "* start: $start"
+    echo "* start: $START"
     echo "* end:   $(date "+%F %T")"
     local h="$((${SECONDS}/3600))"
     local m="$((${SECONDS}%3600/60))"
     local s="$((${SECONDS}%60))"
     printf "* duration: %02d:%02d:%02d [hh:mm:ss]\n" $h $m $s
+
+    echo -e '\n## archived backups\n'
+    echo "'''"
+    eval "tree -n -L 1 $ARCHIVE_DIR | head -n -2"
+    echo "'''"
 
     echo -e '\n## disc space (`df -h $ARCHIVE_DIR`)\n'
     echo -e "'''\n$(df -h $ARCHIVE_DIR)\n'''"
@@ -291,17 +306,16 @@ summary () {
 
 
 main () {
-    local start="$(date "+%F %T")"
-
     check_dirs
     create_backup
     remove_backups
-    summary "$start"
+    summary
     # show/email status
 }
 
 
 SECONDS=0  # used in summary()
+START="$(date "+%F %T")"
 BACKUP_DATE="$(date +%F)"  # used in create_backup(), summary()
 LOGFILE_RSYNC=''  # used in create_backup(), summary()
 
