@@ -14,7 +14,7 @@ Features:
    * coarse grained monthly history:
      try to keep first backup in a month
  * this strategy keeps as many backups as possible
- * create markdown formatted log file
+ * create markdown formatted log files
  * optionally, send short status mails
 
 ## Usage
