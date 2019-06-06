@@ -170,16 +170,17 @@ create_backup () {
     LOGFILE_RSYNC="$ARCHIVE_DIR/$BACKUP_DATE/rsync.log"
 
     if $create; then
-        local rsync="$(create_rsync_cmd $BACKUP_DATE)"
+        echo "start: $START\n"
 
+        local rsync="$(create_rsync_cmd $BACKUP_DATE)"
         local logfile_rsync_tmp="$ARCHIVE_DIR/rsync.${BACKUP_DATE}.log"
 
-        echo -e "$rsync\n..."
-        echo "$rsync" > "$logfile_rsync_tmp"
+        echo -e "'''\n$rsync\n..."
+        echo -e "'''$rsync" > "$logfile_rsync_tmp"
         eval "$rsync &>> $logfile_rsync_tmp"
-        return_code=$?
-        echo "[$return_code]" >> "$logfile_rsync_tmp"
-        echo "[$return_code]"
+        local return_code=$?
+        echo -e "[$return_code]\n'''" >> "$logfile_rsync_tmp"
+        echo -e "[$return_code]\n'''"
 
         mv "$logfile_rsync_tmp" "$LOGFILE_RSYNC"
 
