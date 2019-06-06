@@ -15,7 +15,8 @@ Features:
      try to keep first backup in a month
  * this strategy keeps as many backups as possible
  * create markdown formatted log files
- * optionally, send short status mails
+ * optionally, consume flag files which signal if a new backup is required
+ * optionally, send short status mails (TODO)
 
 ## Usage
 
