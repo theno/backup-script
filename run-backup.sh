@@ -28,10 +28,15 @@ RSYNC_EXCLUDE=(
 #    'Temp*'
 )
 
-CONSUME_FLAGS=true
+CONSUME_FLAGS=false
 FLAGS_DIR='/path/to/flag-files/dir'
 
 ### configuration ends here
+
+
+SECONDS=0  # used in summary()
+BACKUP_DATE="$(date +%F)"  # used in create_backup(), summary()
+LOGFILE_RSYNC=''  # used in create_backup(), summary()
 
 
 low_on_disc_space () {
@@ -61,6 +66,7 @@ check_dirs () {
     if $CONSUME_FLAGS; then
         if [[ ! -d "$FLAGS_DIR" ]]; then
             echo "FLAGS_DIR='$FLAGS_DIR' is not a directory"
+            error=true
         fi
     fi
 
@@ -127,7 +133,6 @@ create_backup () {
     echo -e '\n# create backup\n'
 
     local create=false
-    local date="$(date +%F)"
 
     if $CONSUME_FLAGS; then
         # only create backup if FLAG_NEW_BACKUP_EXISTS and
@@ -135,19 +140,23 @@ create_backup () {
         if [ -f "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ] && \
                 [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_IN_PROGRESS" ]; then
             create=true
-            date="$(cat $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS)"
+            BACKUP_DATE="$(cat $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS)"
         fi
     else
         create=true
     fi
 
+    LOGFILE_RSYNC="$ARCHIVE_DIR/$BACKUP_DATE/rsync.log"
+
     if $create; then
-        local rsync="$(create_rsync_cmd $date)"
+        local rsync="$(create_rsync_cmd $BACKUP_DATE)"
 
-        echo "$rsync" > "/tmp/backup-script_rsync.log"
-        run "$rsync  &>> /tmp/backup-script_rsync.log"
+        local logfile_rsync_tmp="$ARCHIVE_DIR/backup-script_rsync.${BACKUP_DATE}.log"
 
-        run "mv /tmp/backup-script_rsync.log  $ARCHIVE_DIR/$date/rsync.log"
+        echo "$rsync" > "$logfile_rsync_tmp"
+        run "$rsync  &>> $logfile_rsync_tmp"
+
+        run "mv $logfile_rsync_tmp  $LOGFILE_RSYNC"
         echo -e '\ndone'
         if $CONSUME_FLAGS; then
             mv "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS"  \
@@ -245,25 +254,32 @@ remove_backups () {
 }
 
 
-# workflow
-#
-# * if exists FLAG_NEW_BACKUP_EXISTS (and not FLAG_NEW_BACKUP_IN_PROGRESS)
-#   * do backup
-#     * find latest (if symlink exists)
-#     * rsync to YYYY-MM-DD
-#       * use hardlink to latest
-#   * remove old backups
-#     * special order (from high to low)
-#       * latest n backups
-#       * backups with lowest day by month
-#       * rest
-#     * start with lowest backup
-#       * till minimum required free disk space achieved
-#
+summary () {
+    local start="$1"
+    echo -e '\n# summary\n'
+
+    echo "created backup: $BACKUP_DATE"
+
+    echo -e '\n## timing\n'
+    echo "* start: $start"
+    echo "* end:   $(date "+%F %T")"
+    local h="$((${SECONDS}/3600))"
+    local m="$((${SECONDS}%3600/60))"
+    local s="$((${SECONDS}%60))"
+    printf "* duration: %02d:%02d:%02d [hh:mm:ss]\n" $h $m $s
+
+    echo -e '\n## disc space (`df -h $ARCHIVE_DIR`)\n'
+    echo -e "'''\n$(df -h $ARCHIVE_DIR)\n'''"
+}
+
+
 main () {
+    local start="$(date "+%F %T")"
+
     check_dirs
     create_backup
     remove_backups
+    summary "$start"
     # show/email status
 }
 

@@ -5,7 +5,7 @@ Yet another simple backup script based on rsync.  Suited for my needs.
 For daily backup runs.
 
 Features:
- * be simple
+ * be simple (as possible)
  * use hardlinks to save disc space
  * requires a minimum of maintenance work, therefore
  * remove old backups if low on disc space, with respect of a:
@@ -14,6 +14,7 @@ Features:
    * coarse grained monthly history:
      try to keep first backup in a month
  * this strategy keeps as many backups as possible
+ * create markdown formatted log file
  * optionally, send short status mails
 
 ## Usage
