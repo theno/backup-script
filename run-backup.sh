@@ -146,7 +146,7 @@ create_backup () {
     if $create; then
         local rsync="$(create_rsync_cmd $BACKUP_DATE)"
 
-        local logfile_rsync_tmp="$ARCHIVE_DIR/backup-script_rsync.${BACKUP_DATE}.log"
+        local logfile_rsync_tmp="$ARCHIVE_DIR/rsync.${BACKUP_DATE}.log"
 
         echo "$rsync" > "$logfile_rsync_tmp"
         run "$rsync  &>> $logfile_rsync_tmp"
