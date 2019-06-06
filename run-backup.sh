@@ -29,6 +29,7 @@ RSYNC_EXCLUDE=(
 )
 
 CONSUME_FLAGS=true
+FLAGS_DIR='/path/to/flag-files/dir'
 
 ### configuration ends here
 
@@ -56,6 +57,12 @@ check_dirs () {
             error=true
         fi
     done
+
+    if $CONSUME_FLAGS; then
+        if [[ ! -d "$FLAGS_DIR" ]]; then
+            echo "FLAGS_DIR='$FLAGS_DIR' is not a directory"
+        fi
+    fi
 
     if [[ ! -d "$ARCHIVE_DIR" ]]; then
         echo "ARCHIVE_DIR='$ARCHIVE_DIR' is not a directory"
@@ -123,13 +130,12 @@ create_backup () {
     local date="$(date +%F)"
 
     if $CONSUME_FLAGS; then
-        local src="${SOURCE_DIRS[0]}"
         # only create backup if FLAG_NEW_BACKUP_EXISTS and
         # not a FLAG_NEW_BACKUP_IN_PROGRESS
-        if [ -f "$src/FLAG_NEW_BACKUP_EXISTS" ] && \
-                [ ! -f "$src/FLAG_NEW_BACKUP_IN_PROGRESS" ]; then
+        if [ -f "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ] && \
+                [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_IN_PROGRESS" ]; then
             create=true
-            date="$(cat $src/FLAG_NEW_BACKUP_EXISTS)"
+            date="$(cat $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS)"
         fi
     else
         create=true
@@ -144,7 +150,8 @@ create_backup () {
         run "mv /tmp/backup-script_rsync.log  $ARCHIVE_DIR/$date/rsync.log"
         echo -e '\ndone'
         if $CONSUME_FLAGS; then
-            mv "$src/FLAG_NEW_BACKUP_EXISTS" "$src/FLAG_LATEST_ARCHIVED"
+            mv "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS"  \
+                "$FLAGS_DIR/FLAG_LATEST_ARCHIVED"
         fi
     else
         echo 'nothing to do'
@@ -254,9 +261,9 @@ remove_backups () {
 #       * till minimum required free disk space achieved
 #
 main () {
-    # check_dirs
+    check_dirs
     create_backup
-    # remove_backups
+    remove_backups
     # show/email status
 }
 
