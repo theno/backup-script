@@ -176,10 +176,10 @@ create_backup () {
         local logfile_rsync_tmp="$ARCHIVE_DIR/rsync.${BACKUP_DATE}.log"
 
         echo -e "'''\n$rsync\n..."
-        echo -e "'''$rsync" > "$logfile_rsync_tmp"
+        echo -e "$rsync" > "$logfile_rsync_tmp"
         eval "$rsync &>> $logfile_rsync_tmp"
         local return_code=$?
-        echo -e "[$return_code]\n'''" >> "$logfile_rsync_tmp"
+        echo -e "[$return_code]\n" >> "$logfile_rsync_tmp"
         echo -e "[$return_code]\n'''"
 
         mv --force "$logfile_rsync_tmp" "$LOGFILE_RSYNC"
