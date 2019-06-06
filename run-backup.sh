@@ -28,10 +28,18 @@ RSYNC_EXCLUDE=(
 #    'Temp*'
 )
 
-CONSUME_FLAGS=false
-FLAGS_DIR='/path/to/flag-files/dir'
+CONSUME_FLAGS=true
+FLAGS_DIR='source-dir'
 
 ### configuration ends here
+
+
+# Return `true` only if FLAG_NEW_BACKUP_EXISTS exists and
+# not a FLAG_NEW_BACKUP_IN_PROGRESS, `false` else
+flags_signal_a_new_backup_job () {
+    [ -f "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ] && \
+        [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_IN_PROGRESS" ]
+}
 
 
 low_on_disc_space () {
@@ -40,6 +48,7 @@ low_on_disc_space () {
 
     (($bytes_required >= $bytes_available))
 }
+
 
 check_dirs () {
     local error=false
@@ -63,6 +72,19 @@ check_dirs () {
             echo "FLAGS_DIR='$FLAGS_DIR' is not a directory"
             error=true
         fi
+        if [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ] && \
+                [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_IN_PROGRESS" ] && \
+                [ ! -f "$FLAGS_DIR/FLAG_LATEST_ARCHIVED" ]; then
+            echo "no flag files exist in FLAGS_DIR='$FLAGS_DIR'"
+            error=true
+        fi
+        if flags_signal_a_new_backup_job; then
+            if [ ! -w "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ]; then
+                echo -n "could not move $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS "
+                echo "to $FLAGS_DIR/FLAG_LATEST_ARCHIVED (check permissions)"
+                error=true
+            fi
+        fi
     fi
 
     if [[ ! -d "$ARCHIVE_DIR" ]]; then
@@ -76,7 +98,7 @@ check_dirs () {
     fi
 
     if $error; then
-        echo 'abort'
+        echo -e '\nabort'
         exit 1
     else
         echo 'okay'
@@ -130,10 +152,7 @@ create_backup () {
     local create=false
 
     if $CONSUME_FLAGS; then
-        # only create backup if FLAG_NEW_BACKUP_EXISTS and
-        # not a FLAG_NEW_BACKUP_IN_PROGRESS
-        if [ -f "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ] && \
-                [ ! -f "$FLAGS_DIR/FLAG_NEW_BACKUP_IN_PROGRESS" ]; then
+        if flags_signal_a_new_backup_job; then
             create=true
             BACKUP_DATE="$(cat $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS)"
         fi
@@ -282,6 +301,5 @@ main () {
 SECONDS=0  # used in summary()
 BACKUP_DATE="$(date +%F)"  # used in create_backup(), summary()
 LOGFILE_RSYNC=''  # used in create_backup(), summary()
-
 
 main
