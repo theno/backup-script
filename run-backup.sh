@@ -28,7 +28,7 @@ RSYNC_EXCLUDE=(
 #    'Temp*'
 )
 
-CONSUME_FLAGS=true
+CONSUME_FLAGS=false
 FLAGS_DIR='source-dir'
 
 ### configuration ends here
@@ -149,14 +149,6 @@ create_rsync_cmd () {
 }
 
 
-run () {
-    local cmd=$1
-    echo "$cmd"
-    eval "$cmd"
-    echo "[$?]"
-}
-
-
 create_backup () {
     echo -e '\n# create backup\n'
 
@@ -178,10 +170,15 @@ create_backup () {
 
         local logfile_rsync_tmp="$ARCHIVE_DIR/rsync.${BACKUP_DATE}.log"
 
+        echo -e "$rsync\n..."
         echo "$rsync" > "$logfile_rsync_tmp"
-        run "$rsync  &>> $logfile_rsync_tmp"
+        eval "$rsync &>> $logfile_rsync_tmp"
+        return_code=$?
+        echo "[$return_code]" >> "$logfile_rsync_tmp"
+        echo "[$return_code]"
 
-        run "mv $logfile_rsync_tmp  $LOGFILE_RSYNC"
+        mv "$logfile_rsync_tmp" "$LOGFILE_RSYNC"
+
         echo -e '\ndone'
         if $CONSUME_FLAGS; then
             mv "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS"  \
@@ -285,6 +282,13 @@ summary () {
     echo -e 'created backup:\n'
     echo "'''"
     eval "tree -n -L 1 $ARCHIVE_DIR/$BACKUP_DATE | head -n -2"
+    echo "'''"
+
+    echo -e '\n## rsync command\n'
+    echo "'''"
+    head -n 1 "$LOGFILE_RSYNC"
+    echo '...'
+    tail -n 3 "$LOGFILE_RSYNC"
     echo "'''"
 
     echo -e '\n## timing\n'
