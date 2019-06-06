@@ -92,8 +92,7 @@ check_dirs () {
     if [ ! -d "$ARCHIVE_DIR" ]; then
         echo "* ARCHIVE_DIR='$ARCHIVE_DIR' is not a directory"
         error=true
-    fi
-    if [ ! -w "$ARCHIVE_DIR" ]; then
+    elif [ ! -w "$ARCHIVE_DIR" ]; then
         echo "* cannot write to ARCHIVE_DIR='$ARCHIVE_DIR' (check permissions)"
         error=true
     fi
