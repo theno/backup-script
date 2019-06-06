@@ -117,8 +117,13 @@ check_dirs () {
 }
 
 
+list_backups () {
+    ls $ARCHIVE_DIR | grep -E '^[0-9]{4}(-[0-9]{2}){2}$'
+}
+
+
 latest_backup () {
-    eval "ls $ARCHIVE_DIR | tail -n1"
+   list_backups | tail -n1
 }
 
 
@@ -207,7 +212,7 @@ create_backup () {
 #
 special_order () {
     local archive_dir="$1"
-    local ymds=( $(ls "$archive_dir") )
+    local ymds=( $(list_backups) )
 
     local special_order="${ymds[@]}"
 
