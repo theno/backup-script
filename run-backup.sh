@@ -34,11 +34,6 @@ FLAGS_DIR='/path/to/flag-files/dir'
 ### configuration ends here
 
 
-SECONDS=0  # used in summary()
-BACKUP_DATE="$(date +%F)"  # used in create_backup(), summary()
-LOGFILE_RSYNC=''  # used in create_backup(), summary()
-
-
 low_on_disc_space () {
     local bytes_required=$(expr $MIN_FREE_DISC_SPACE_IN_GB \* 1024 \* 1024)
     local bytes_available=$(df --output=avail . | awk 'NR==2{print $1}')
@@ -282,6 +277,11 @@ main () {
     summary "$start"
     # show/email status
 }
+
+
+SECONDS=0  # used in summary()
+BACKUP_DATE="$(date +%F)"  # used in create_backup(), summary()
+LOGFILE_RSYNC=''  # used in create_backup(), summary()
 
 
 main
