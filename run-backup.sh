@@ -81,7 +81,7 @@ check_dirs () {
             error=true
         fi
         if flags_signal_a_new_backup_job; then
-            if [ ! -w "$FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS" ]; then
+            if [ ! -w "$FLAGS_DIR" ]; then
                 echo -n "* could not move $FLAGS_DIR/FLAG_NEW_BACKUP_EXISTS "
                 echo "to $FLAGS_DIR/FLAG_LATEST_ARCHIVED (check permissions)"
                 error=true
@@ -170,7 +170,7 @@ create_backup () {
     LOGFILE_RSYNC="$ARCHIVE_DIR/$BACKUP_DATE/rsync.log"
 
     if $create; then
-        echo "start: $START\n"
+        echo -e "start: $START\n"
 
         local rsync="$(create_rsync_cmd $BACKUP_DATE)"
         local logfile_rsync_tmp="$ARCHIVE_DIR/rsync.${BACKUP_DATE}.log"
@@ -182,7 +182,7 @@ create_backup () {
         echo -e "[$return_code]\n'''" >> "$logfile_rsync_tmp"
         echo -e "[$return_code]\n'''"
 
-        mv "$logfile_rsync_tmp" "$LOGFILE_RSYNC"
+        mv --force "$logfile_rsync_tmp" "$LOGFILE_RSYNC"
 
         echo -e '\ndone'
         if $CONSUME_FLAGS; then
