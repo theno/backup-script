@@ -33,6 +33,7 @@ FLAGS_DIR='source-dir'
 
 ### configuration ends here
 
+if [ -z "${BASH_VERSINFO}" ] || [ -z "${BASH_VERSINFO[0]}" ] || [ ${BASH_VERSINFO[0]} -lt 4 ]; then echo "This script requires Bash version >= 4"; exit 1; fi
 
 # Return `true` only if FLAG_NEW_BACKUP_EXISTS exists and
 # not a FLAG_NEW_BACKUP_IN_PROGRESS, `false` else
@@ -51,9 +52,9 @@ low_on_disc_space () {
 
 
 check_dirs () {
-    local error=false
-
     echo -e '# check dirs\n'
+
+    local error=false
 
     if [ "${#SOURCE_DIRS[@]}" -eq "0" ]; then
         echo "* no SOURCE_DIRS=('/path/to/source' ...) configured"
@@ -323,9 +324,9 @@ main () {
 }
 
 
-SECONDS=0  # used in summary()
-START="$(date "+%F %T")"
-BACKUP_DATE="$(date +%F)"  # used in create_backup(), summary()
+SECONDS=0  # reset seconds counter (bash built-in), used in summary()
+START="$(date "+%F %T")"  # used in create_backup(), summary()
+BACKUP_DATE="$(date "+%F")"  # used in create_backup(), summary()
 LOGFILE_RSYNC=''  # used in create_backup(), summary()
 
 main
