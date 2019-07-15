@@ -170,7 +170,7 @@ remove_wimages () {
     echo -e '\n# remove wimages from archive\n'
     if [ -f "$ARCHIVE_WIMAGE" ]; then
         if low_on_disc_space; then
-            while low_on_disc_space; do  # TODO DEBUG
+            while low_on_disc_space; do
                 count="$(wiminfo "$ARCHIVE_WIMAGE" | sed -n 's/^Image Count:\s\+\([0-9]\+\)/\1/p')"
                 if [ "$count" -le "$ALWAYS_KEEP_AT_LEAST" ]; then
                     echo "only $count wimages exist (skip)"
