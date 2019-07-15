@@ -14,12 +14,12 @@ Features:
    * coarse grained monthly history:
      try to keep first backup in a month
  * this strategy keeps as many backups as possible
- * create markdown formatted log files
+ * create markdown formatted log files (TODO)
  * optionally, consume flag files which signal if a new backup is required
  * optionally, send short status mails (TODO)
 
 ## Usage
 
 ```sh
-./run-backup.sh
+bash run-backup.sh
 ```
