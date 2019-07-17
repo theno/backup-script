@@ -141,7 +141,7 @@ archive_wimage () {
         if [ -f "$source_wimage" ]; then
             # FIXME: export latest wimage instead of first
             run "wimexport $source_wimage 1 "$ARCHIVE_WIMAGE"  --no-check"
-            mv "$source_dir/FLAG_NEW_WIMAGE_EXISTS" "$source_dir/FLAG_LATEST_ARCHIVED"
+            mv -f "$source_dir/FLAG_NEW_WIMAGE_EXISTS" "$source_dir/FLAG_LATEST_ARCHIVED"
             image_archived=true
         else
             echo "flags signal to archive a new wimage"
