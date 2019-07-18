@@ -24,7 +24,7 @@ c:\cygwin64\bin\scp.exe %thisdir_unix%START.txt  %host%:wimage-rampe/START
 c:\cygwin64\bin\scp.exe %thisdir_unix%END.txt  %host%:wimage-rampe/END
 c:\cygwin64\bin\scp.exe %thisdir_unix%MINUTES_UP.txt  %host%:wimage-rampe/MINUTES_UP
 c:\cygwin64\bin\scp.exe %thisdir_unix%sources/install.wim  %host%:wimage-rampe/install.wim
-c:\cygwin64\bin\ssh.exe %host% mv wimage-rampe/FLAG_NEW_WIMAGE_IN_PROGRESS  wimage-rampe/FLAG_NEW_WIMAGE_EXISTS
+c:\cygwin64\bin\ssh.exe %host% mv -f wimage-rampe/FLAG_NEW_WIMAGE_IN_PROGRESS  wimage-rampe/FLAG_NEW_WIMAGE_EXISTS
 
 :: shutdown
 
