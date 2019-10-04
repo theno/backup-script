@@ -17,7 +17,7 @@ MIN_FREE_DISC_SPACE_IN_GB=30
 NUMBER_OF_RECENT_BACKUPS=7
 
 # if low on disc space
-ALWAYS_KEEP_AT_LEAST=2
+ALWAYS_KEEP_AT_LEAST=20
 # backups
 
 RSYNC_CMD='/usr/bin/rsync'
