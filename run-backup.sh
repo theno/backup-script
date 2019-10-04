@@ -31,6 +31,10 @@ RSYNC_EXCLUDE=(
 CONSUME_FLAGS=false
 FLAGS_DIR='source-dir'
 
+# optional
+#ADMIN_EMAIL='admin@email.address'
+#USER_EMAIL='user@email.address'
+
 ### configuration ends here
 
 if [ -z "${BASH_VERSINFO}" ] || [ -z "${BASH_VERSINFO[0]}" ] || [ ${BASH_VERSINFO[0]} -lt 4 ]; then echo "This script requires Bash version >= 4"; exit 1; fi
@@ -168,8 +172,6 @@ create_backup () {
         create=true
     fi
 
-    LOGFILE_RSYNC="$ARCHIVE_DIR/$BACKUP_DATE/rsync.log"
-
     if $create; then
         echo -e "start: $START\n"
 
@@ -180,7 +182,7 @@ create_backup () {
         echo -e "$rsync" > "$logfile_rsync_tmp"
         eval "$rsync &>> $logfile_rsync_tmp"
         local return_code=$?
-        echo -e "[$return_code]\n" >> "$logfile_rsync_tmp"
+        echo -e "[$return_code]" >> "$logfile_rsync_tmp"
         echo -e "[$return_code]\n'''"
 
         mv --force "$logfile_rsync_tmp" "$LOGFILE_RSYNC"
@@ -283,7 +285,7 @@ remove_backups () {
 
 
 summary () {
-    echo -e '\n# summary\n'
+    echo -e "\n# summary $BACKUP_DATE\n"
 
     echo -e 'created backup:\n'
     echo "'''"
@@ -316,17 +318,37 @@ summary () {
 
 
 main () {
-    check_dirs
-    create_backup
-    remove_backups
-    summary
-    # show/email status
+    check_dirs |& tee "$OUTPUT_TMP"
+    create_backup |& tee --append "$OUTPUT_TMP"
+
+    mv "$OUTPUT_TMP"  "$OUTPUT_FILE"
+
+    remove_backups |& tee --append "$OUTPUT_FILE"
+    summary |& tee --append "$OUTPUT_FILE" | tee "$SUMMARY_FILE"
+
+    if [ -n "$ADMIN_EMAIL" ]; then
+        mail -s "run-backup.sh: Output"   "$ADMIN_EMAIL"  < "$OUTPUT_FILE"
+    fi
+    if [ -n "$USER_EMAIL" ]; then
+        mail -s "run-backup.sh: Summary"  "$USER_EMAIL"  < "$SUMMARY_FILE"
+    fi
 }
 
 
-SECONDS=0  # reset seconds counter (bash built-in), used in summary()
-START="$(date "+%F %T")"  # used in create_backup(), summary()
-BACKUP_DATE="$(date "+%F")"  # used in create_backup(), summary()
-LOGFILE_RSYNC=''  # used in create_backup(), summary()
+# reset seconds counter (bash built-in)
+# used in summary()
+SECONDS=0
+
+# used in create_backup(), summary()
+START="$(date "+%F %T")"
+BACKUP_DATE="$(date "+%F")"
+
+# used in create_backup(), summary()
+LOGFILE_RSYNC="$ARCHIVE_DIR/$BACKUP_DATE/rsync.log"
+
+# used in main()
+OUTPUT_TMP="$ARCHIVE_DIR/backup.${BACKUP_DATE}.log.md"
+OUTPUT_FILE="$ARCHIVE_DIR/${BACKUP_DATE}/backup.log.md"
+SUMMARY_FILE="$ARCHIVE_DIR/latest-summary.md"
 
 main
