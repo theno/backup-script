@@ -14,9 +14,22 @@ Features:
    * coarse grained monthly history:
      try to keep first backup in a month
  * this strategy keeps as many backups as possible
- * create markdown formatted log files (TODO)
+ * create markdown formatted log files
  * optionally, consume flag files which signal if a new backup is required
- * optionally, send short status mails (TODO)
+ * optionally, send backup log mail to admin
+ * optionally, send summary mail to user
+
+## Setup
+
+### Requirements
+
+`run-backup.sh` needs: `bash`, `postfix`, `rsync`, `tee`
+
+When installing on a debian flavored you could install them by running:
+
+```sh
+sudo apt install  bash postfix rsync tee
+```
 
 ## Usage
 
