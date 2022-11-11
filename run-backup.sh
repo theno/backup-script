@@ -49,7 +49,7 @@ flags_signal_a_new_backup_job () {
 
 low_on_disc_space () {
     local bytes_required=$(expr $MIN_FREE_DISC_SPACE_IN_GB \* 1024 \* 1024)
-    local bytes_available=$(df --output=avail . | awk 'NR==2{print $1}')
+    local bytes_available=$(df --output=avail $ARCHIVE_DIR | awk 'NR==2{print $1}')
 
     (($bytes_required >= $bytes_available))
 }
